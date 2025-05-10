@@ -1,0 +1,12 @@
+# Ignore Python virtual environments
+venv/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Flask environment variables
+.env
+
+# Ignore VSCode config folders
+.vscode/
