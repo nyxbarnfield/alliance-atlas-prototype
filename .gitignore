@@ -10,3 +10,6 @@ __pycache__/
 
 # Ignore VSCode config folders
 .vscode/
+
+# Ignore Instance files
+instance/
