@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Create NPC{% endblock %}
+{% block content %}
+<h2>Create NPC for {{ campaign.name }}</h2>
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" name="npc_name" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Species / Race</label>
+        <select class="form-select" name="npc_species" required>
+            {% for race in race_list %}
+                <option value="{{ race }}">{{ race }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Occupation / Class</label>
+        <select class="form-select" name="npc_occupation_select" onchange="toggleOther(this)">
+            {% for job in occupation_list %}
+                <option value="{{ job }}">{{ job }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" class="form-control mt-2" name="npc_occupation_other" id="occupationOther" placeholder="Enter occupation" style="display:none;">
+    </div>
+
+<div class="mb-3">
+    <label class="form-label">Age Range</label>
+    <select name="npc_age" class="form-select" required>
+        {% for age in age_range_list %}
+            <option value="{{ age }}">{{ age }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" name="npc_description" rows="2" required></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Faction Affiliation</label>
+        <select name="npc_faction" class="form-select">
+            {% for faction in factions %}
+                <option value="{{ faction.id }}">{{ faction.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="is_leader" value="yes" id="isLeader">
+        <label class="form-check-label" for="isLeader">
+            Is this NPC a faction leader?
+        </label>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Relationship Notes (optional)</label>
+        <textarea class="form-control" name="relationship_notes" rows="2"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create NPC</button>
+</form>
+
+<script>
+function toggleOther(select) {
+    const otherInput = document.getElementById('occupationOther');
+    if (select.value === 'Other') {
+        otherInput.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.required = false;
+    }
+}
+</script>
+{% endblock %}

@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h2>Welcome, {{ user.username.capitalize() }}</h2>
-<p>Your Campaigns:</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Welcome, {{ user.username.capitalize() }}</h2>
+    <a href="{{ url_for('create_campaign') }}" class="btn btn-success">+ New Campaign</a>
+</div>
+
 <ul class="list-group">
     {% for m in memberships %}
     <li class="list-group-item d-flex justify-content-between">

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Create Faction{% endblock %}
+{% block content %}
+<h2>Create Faction for {{ campaign.name }}</h2>
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Faction Name</label>
+        <input type="text" class="form-control" name="faction_name" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Summary</label>
+        <textarea class="form-control" name="faction_summary" maxlength="300"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Faction Type</label>
+        <select class="form-select" name="faction_type">
+            {% for type in faction_type_list %}
+                <option value="{{ type }}">{{ type }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Base of Operations</label>
+        <input type="text" class="form-control" name="faction_location">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Alignment</label>
+        <select class="form-select" name="faction_alignment" required>
+            {% for alignment in alignment_list %}
+                <option value="{{ alignment }}">{{ alignment }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Leader Name</label>
+        <input type="text" class="form-control" name="faction_leader" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Faction</button>
+</form>
+{% endblock %}
