@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2>Welcome, {{ user.username.capitalize() }}</h2>
+<p>Your Campaigns:</p>
+<ul class="list-group">
+    {% for m in memberships %}
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ m.campaign.name }}</span>
+        <span class="badge bg-secondary">{{ m.role }}</span>
+    </li>
+    {% else %}
+    <li class="list-group-item">No campaigns yet.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
