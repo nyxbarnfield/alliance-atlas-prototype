@@ -90,63 +90,59 @@ def create_campaign():
 @app.route('/campaign/<int:campaign_id>/faction/new', methods=['GET', 'POST'])
 def create_faction(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
-
-    # Load all master factions that have not yet been used in this campaign
-    used_names = {f.name for f in campaign.factions}
+    used_names = [f.name for f in campaign.factions]
     master_factions = MasterFaction.query.all()
-    available_master_factions = [
-        f for f in master_factions if f.name not in used_names
-    ]
 
-    # Build the form and populate dropdowns
-    form = FactionForm()
-    form.alignment.choices = [(a, a) for a in alignment_list]
-    form.faction_type.choices = [(t, t) for t in faction_type_list]
+    # --- Check if form submitted ---
+    if request.method == 'POST':
+        name = request.form.get('name').strip()
+        summary = request.form.get('summary')
+        faction_type = request.form.get('faction_type')
+        base_location = request.form.get('base_location')
+        alignment = request.form.get('alignment')
+        leader_name = request.form.get('leader_name')
+        source = request.form.get('source')
 
-    # Handle master faction prefill
-    selected_id = request.args.get('master_id')
-    if selected_id:
-        selected = MasterFaction.query.get(int(selected_id))
-        if selected:
-            form.name.data = selected.name
-            form.summary.data = selected.summary
-            form.faction_type.data = selected.faction_type
-            form.base_location.data = selected.base_location
-            form.alignment.data = selected.alignment
-            form.leader_name.data = selected.default_leader
-            form.source.data = selected.source
-
-    # Handle POST
-    if form.validate_on_submit():
-        if form.skip.data:
-            return redirect(url_for('create_npc', campaign_id=campaign.id))
-
-        # Check for duplicates
-        if Faction.query.filter_by(name=form.name.data.strip(), campaign_id=campaign.id).first():
-            form.name.errors.append("A faction with that name already exists in this campaign.")
-            flash("⚠️ A faction with that name already exists in this campaign.", "danger")
-        else:
-            faction = Faction(
-                name=form.name.data.strip(),
-                summary=form.summary.data,
-                faction_type=form.faction_type.data,
-                base_location=form.base_location.data,
-                alignment=form.alignment.data,
-                leader_name=form.leader_name.data,
-                source=form.source.data,
-                campaign_id=campaign.id
+        existing = Faction.query.filter_by(name=name, campaign_id=campaign.id).first()
+        if existing:
+            error = "A faction with that name already exists in this campaign."
+            return render_template(
+                'create_faction.html',
+                campaign=campaign,
+                master_factions=master_factions,
+                faction_type_list=faction_type_list,
+                alignment_list=alignment_list,
+                source_list=source_list,
+                used_names=used_names,
+                error=error,
+                previous_data=request.form
             )
-            db.session.add(faction)
-            db.session.commit()
-            flash("✅ Faction created successfully!", "success")
-            return redirect(url_for('create_npc', campaign_id=campaign.id))
 
+        faction = Faction(
+            name=name,
+            summary=summary,
+            faction_type=faction_type,
+            base_location=base_location,
+            alignment=alignment,
+            leader_name=leader_name,
+            source=source,
+            campaign_id=campaign.id
+        )
+        db.session.add(faction)
+        db.session.commit()
+
+        return redirect(url_for('create_faction', campaign_id=campaign.id, success=1))
+
+    success = request.args.get("success") == "1"
     return render_template(
         'create_faction.html',
         campaign=campaign,
-        form=form,
-        master_factions=available_master_factions,
-        selected_master_id=selected_id
+        master_factions=master_factions,
+        faction_type_list=faction_type_list,
+        alignment_list=alignment_list,
+        source_list=source_list,
+        used_names=used_names,
+        success=success
     )
 
 @app.route('/campaign/<int:campaign_id>/npc/new', methods=['GET', 'POST'])
