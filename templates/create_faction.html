@@ -3,13 +3,11 @@
 <div class="container mt-5">
   <h2>Create a Faction for <strong>{{ campaign.name }}</strong></h2>
 
-  {% if success %}
-    <div class="alert alert-success mt-3">✅ {{ success }}</div>
-  {% endif %}
-
-  {% if error %}
-    <div class="alert alert-danger mt-3">⚠️ {{ error }}</div>
-  {% endif %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }}">
+    {% endfor %}
+  {% endwith %}
 
   <form method="POST" class="mt-4">
     {{ form.hidden_tag() }}
@@ -42,7 +40,7 @@
     <!-- Name -->
     <div class="mb-3">
       {{ form.name.label(class="form-label") }}
-      {{ form.name(class="form-control" + (' is-invalid' if form.name.errors else '')) }}
+      {{ form.name(class="form-control" + (' is-invalid' if form.name.errors else ''), id="name", required=true) }}
       {% for err in form.name.errors %}
         <div class="invalid-feedback">{{ err }}</div>
       {% endfor %}
@@ -51,43 +49,43 @@
     <!-- Summary -->
     <div class="mb-3">
       {{ form.summary.label(class="form-label") }}
-      {{ form.summary(class="form-control") }}
+      {{ form.summary(class="form-control", id="summary") }}
     </div>
 
     <!-- Faction Type -->
     <div class="mb-3">
       {{ form.faction_type.label(class="form-label") }}
-      {{ form.faction_type(class="form-select") }}
+      {{ form.faction_type(class="form-select", id="faction_type") }}
     </div>
 
     <!-- Base Location -->
     <div class="mb-3">
       {{ form.base_location.label(class="form-label") }}
-      {{ form.base_location(class="form-control") }}
+      {{ form.base_location(class="form-control", id="base_location") }}
     </div>
 
     <!-- Alignment -->
     <div class="mb-3">
       {{ form.alignment.label(class="form-label") }}
-      {{ form.alignment(class="form-select") }}
+      {{ form.alignment(class="form-select", id="alignment") }}
     </div>
 
     <!-- Leader Name -->
     <div class="mb-3">
       {{ form.leader_name.label(class="form-label") }}
-      {{ form.leader_name(class="form-control") }}
+      {{ form.leader_name(class="form-control", id="leader_name") }}
     </div>
 
     <!-- Source -->
     <div class="mb-3">
       {{ form.source.label(class="form-label") }}
-      {{ form.source(class="form-control", placeholder="e.g. Waterdeep: Dragon Heist") }}
+      {{ form.source(class="form-control", placeholder="e.g. Waterdeep: Dragon Heist", id="source") }}
     </div>
 
     <!-- Submit & Skip Buttons -->
     <div class="d-flex gap-2">
       {{ form.submit(class="btn btn-primary") }}
-      <a href="{{ url_for('create_npc', campaign_id=campaign.id) }}" class="btn btn-outline-secondary">Skip to NPCs</a>
+      {{ form.skip(class="btn btn-outline-secondary") }}
     </div>
   </form>
 </div>

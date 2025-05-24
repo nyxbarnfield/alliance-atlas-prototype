@@ -1,5 +1,5 @@
 from flask import Flask, flash, render_template, redirect, url_for, request, session
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, func
 from forms import FactionForm
 import os
 
@@ -92,18 +92,21 @@ def create_faction(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
     form = FactionForm()
 
+    # Always repopulate select options
+    form.faction_type.choices = [(val, val) for val in faction_type_list]
+    form.alignment.choices = [(val, val) for val in alignment_list]
+
     master_factions = MasterFaction.query.all()
     used_names = [f.name for f in campaign.factions]
-
-    error = None
     success = None
 
     if form.validate_on_submit():
-        # Check for duplicates within the campaign
-        existing = Faction.query.filter_by(name=form.name.data.strip(), campaign_id=campaign.id).first()
+        existing = Faction.query.filter(
+            func.lower(Faction.name) == form.name.data.strip().lower(),
+            Faction.campaign_id == campaign.id
+        ).first()
         if existing:
             form.name.errors.append("A faction with that name already exists in this campaign.")
-            error = "A faction with that name already exists in this campaign."
         else:
             new_faction = Faction(
                 name=form.name.data.strip(),
@@ -117,30 +120,21 @@ def create_faction(campaign_id):
             )
             db.session.add(new_faction)
             db.session.commit()
-            success = "Faction created successfully!"
+            flash("Faction created successfully!", "success")
 
-            # If they clicked "Skip to NPCs"
             if form.skip.data:
                 return redirect(url_for('create_npc', campaign_id=campaign.id))
 
-            # Reset form for a fresh creation if they want to add more
-            form = FactionForm()  # reset form
-            form.faction_type.choices = [(val, val) for val in faction_type_list]
-            form.alignment.choices = [(val, val) for val in alignment_list]
-
-    # Ensure choices are populated outside form lifecycle
-    form.faction_type.choices = [(val, val) for val in faction_type_list]
-    form.alignment.choices = [(val, val) for val in alignment_list]
+            return redirect(url_for('create_faction', campaign_id=campaign.id))  # reload fresh form
 
     return render_template(
         'create_faction.html',
         campaign=campaign,
         form=form,
         master_factions=master_factions,
-        used_names=used_names,
-        success=success,
-        error=error
+        used_names=used_names
     )
+
 
     
 @app.route('/campaign/<int:campaign_id>/npc/new', methods=['GET', 'POST'])
