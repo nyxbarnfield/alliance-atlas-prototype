@@ -1,0 +1,38 @@
+<!-- templates/claim_pc.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Claim a Character</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+
+<h2>Join Campaign: {{ campaign.name }}</h2>
+
+{% if unclaimed_pcs %}
+    <form method="POST" action="{{ url_for('claim_pc', campaign_id=campaign.id) }}">
+        <div class="mb-3">
+            <label for="pc_id" class="form-label">Select a Character to Claim</label>
+            <select name="pc_id" class="form-select" required>
+                {% for pc in unclaimed_pcs %}
+                    <option value="{{ pc.id }}">{{ pc.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Claim Selected Character</button>
+    </form>
+    <hr>
+{% endif %}
+
+<h4>Or Create a New Character</h4>
+<form method="POST" action="{{ url_for('create_pc', campaign_id=campaign.id) }}">
+    <div class="mb-3">
+        <label class="form-label">Character Name</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success">Create New Character</button>
+</form>
+
+</body>
+</html>

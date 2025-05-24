@@ -1,4 +1,4 @@
-race_list = [
+species_list = [
     # Core
     "Human", "Elf", "Dwarf", "Halfling", "Gnome", "Half-Orc", "Half-Elf",
 

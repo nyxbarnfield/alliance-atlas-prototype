@@ -1,81 +1,99 @@
-{% extends 'base.html' %}
-{% block title %}Create NPC{% endblock %}
-{% block content %}
-<h2>Create NPC for {{ campaign.name }}</h2>
-<form method="POST">
+<!-- templates/create_faction.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Faction for {{ campaign.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+
+<h2>Create Faction for <strong>{{ campaign.name }}</strong></h2>
+
+<form method="POST" action="{{ url_for('create_faction', campaign_id=campaign.id) }}">
+    <div class="mb-4">
+        <label class="form-label">Use Existing Master Faction (optional)</label>
+        <select id="master_faction_id" name="master_faction_id" class="form-select">
+            <option value="">-- Select Master Faction --</option>
+            {% for mf in master_factions %}
+                <option value="{{ mf.id }}"
+                    data-name="{{ mf.name }}"
+                    data-summary="{{ mf.summary }}"
+                    data-type="{{ mf.faction_type }}"
+                    data-base="{{ mf.base_location }}"
+                    data-alignment="{{ mf.alignment }}"
+                    data-leader="{{ mf.default_leader }}"
+                    data-source="{{ mf.source }}"
+                >
+                    {{ mf.name }} ({{ mf.source }})
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <hr>
+    <h5 class="mb-3">Or create a new faction:</h5>
+
     <div class="mb-3">
-        <label class="form-label">Name</label>
-        <input type="text" class="form-control" name="npc_name" required>
+        <label class="form-label">Faction Name</label>
+        <input type="text" name="name" class="form-control" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Species / Race</label>
-        <select class="form-select" name="npc_species" required>
-            {% for race in race_list %}
-                <option value="{{ race }}">{{ race }}</option>
+        <label class="form-label">Summary</label>
+        <textarea name="summary" class="form-control" rows="3" required></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Faction Type</label>
+        <select name="faction_type" class="form-select" required>
+            {% for ft in faction_type_list %}
+                <option value="{{ ft }}">{{ ft }}</option>
             {% endfor %}
         </select>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Occupation / Class</label>
-        <select class="form-select" name="npc_occupation_select" onchange="toggleOther(this)">
-            {% for job in occupation_list %}
-                <option value="{{ job }}">{{ job }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" class="form-control mt-2" name="npc_occupation_other" id="occupationOther" placeholder="Enter occupation" style="display:none;">
-    </div>
-
-<div class="mb-3">
-    <label class="form-label">Age Range</label>
-    <select name="npc_age" class="form-select" required>
-        {% for age in age_range_list %}
-            <option value="{{ age }}">{{ age }}</option>
-        {% endfor %}
-    </select>
-</div>
-
-
-    <div class="mb-3">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" name="npc_description" rows="2" required></textarea>
+        <label class="form-label">Base of Operations</label>
+        <input type="text" name="base_location" class="form-control" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Faction Affiliation</label>
-        <select name="npc_faction" class="form-select">
-            {% for faction in factions %}
-                <option value="{{ faction.id }}">{{ faction.name }}</option>
+        <label class="form-label">Alignment</label>
+        <select name="alignment" class="form-select" required>
+            {% for a in alignment_list %}
+                <option value="{{ a }}">{{ a }}</option>
             {% endfor %}
         </select>
     </div>
 
-    <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" name="is_leader" value="yes" id="isLeader">
-        <label class="form-check-label" for="isLeader">
-            Is this NPC a faction leader?
-        </label>
+    <div class="mb-3">
+        <label class="form-label">Leader Name</label>
+        <input type="text" name="leader_name" class="form-control" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Relationship Notes (optional)</label>
-        <textarea class="form-control" name="relationship_notes" rows="2"></textarea>
+        <label class="form-label">Source (optional)</label>
+        <input type="text" name="source" class="form-control" placeholder="e.g. Waterdeep: Dragon Heist">
     </div>
 
-    <button type="submit" class="btn btn-primary">Create NPC</button>
+    <button type="submit" class="btn btn-primary">Create Faction</button>
 </form>
 
 <script>
-function toggleOther(select) {
-    const otherInput = document.getElementById('occupationOther');
-    if (select.value === 'Other') {
-        otherInput.style.display = 'block';
-        otherInput.required = true;
-    } else {
-        otherInput.style.display = 'none';
-        otherInput.required = false;
-    }
-}
+    document.getElementById('master_faction_id').addEventListener('change', function () {
+        const selected = this.options[this.selectedIndex];
+        if (!selected.value) return;
+
+        document.querySelector('input[name="name"]').value = selected.dataset.name || '';
+        document.querySelector('textarea[name="summary"]').value = selected.dataset.summary || '';
+        document.querySelector('select[name="faction_type"]').value = selected.dataset.type || '';
+        document.querySelector('input[name="base_location"]').value = selected.dataset.base || '';
+        document.querySelector('select[name="alignment"]').value = selected.dataset.alignment || '';
+        document.querySelector('input[name="leader_name"]').value = selected.dataset.leader || '';
+        document.querySelector('input[name="source"]').value = selected.dataset.source || '';
+    });
 </script>
-{% endblock %}
+
+</body>
+</html>
