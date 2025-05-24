@@ -89,6 +89,7 @@ def create_campaign():
 
 @app.route('/campaign/<int:campaign_id>/faction/new', methods=['GET', 'POST'])
 def create_faction(campaign_id):
+    success = False
     campaign = Campaign.query.get_or_404(campaign_id)
     used_names = [f.name for f in campaign.factions]
     master_factions = MasterFaction.query.all()
@@ -130,6 +131,7 @@ def create_faction(campaign_id):
         )
         db.session.add(faction)
         db.session.commit()
+        success = True
 
         return redirect(url_for('create_faction', campaign_id=campaign.id, success=1))
 

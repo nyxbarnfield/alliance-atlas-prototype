@@ -16,17 +16,23 @@
     <!-- Master Faction Dropdown -->
     <div class="mb-4">
       <label for="master_faction_id" class="form-label">Use Existing Master Faction (optional)</label>
-      <select id="master_faction_id" name="master_faction_id" class="form-select" onchange="this.form.submit()">
+        <select id="master_faction_select" class="form-select">
         <option value="">-- Select Master Faction --</option>
         {% for master in master_factions %}
-          {% if master.name not in used_names %}
+            {% if master.name not in used_names %}
             <option value="{{ master.id }}"
-              {% if previous_data and previous_data.master_faction_id == master.id|string %}selected{% endif %}>
-              {{ master.name }} ({{ master.source }})
+                    data-name="{{ master.name }}"
+                    data-summary="{{ master.summary }}"
+                    data-faction-type="{{ master.faction_type }}"
+                    data-base-location="{{ master.base_location }}"
+                    data-alignment="{{ master.alignment }}"
+                    data-leader-name="{{ master.default_leader }}"
+                    data-source="{{ master.source }}">
+                {{ master.name }} ({{ master.source }})
             </option>
-          {% endif %}
+            {% endif %}
         {% endfor %}
-      </select>
+        </select>
     </div>
 
     <hr>
@@ -98,4 +104,21 @@
     </div>
   </form>
 </div>
+
+<script>
+  const masterSelect = document.getElementById('master_faction_select');
+  if (masterSelect) {
+    masterSelect.addEventListener('change', function () {
+      const selected = this.options[this.selectedIndex];
+      document.getElementById('name').value = selected.dataset.name || '';
+      document.getElementById('summary').value = selected.dataset.summary || '';
+      document.getElementById('faction_type').value = selected.dataset.factionType || '';
+      document.getElementById('base_location').value = selected.dataset.baseLocation || '';
+      document.getElementById('alignment').value = selected.dataset.alignment || '';
+      document.getElementById('leader_name').value = selected.dataset.leaderName || '';
+      document.getElementById('source').value = selected.dataset.source || '';
+    });
+  }
+</script>
+
 {% endblock %}
