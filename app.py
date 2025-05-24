@@ -92,20 +92,20 @@ def create_faction(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
     form = FactionForm()
 
-    # Populate choices for select fields
-    form.alignment.choices = [(a, a) for a in alignment_list]
-    form.faction_type.choices = [(t, t) for t in faction_type_list]
+    master_factions = MasterFaction.query.all()
+    used_names = [f.name for f in campaign.factions]
 
-    success = False
+    error = None
+    success = None
 
     if form.validate_on_submit():
-        # Check for duplicate faction name
-        existing_faction = Faction.query.filter_by(name=form.name.data.strip(), campaign_id=campaign.id).first()
-        if existing_faction:
+        # Check for duplicates within the campaign
+        existing = Faction.query.filter_by(name=form.name.data.strip(), campaign_id=campaign.id).first()
+        if existing:
             form.name.errors.append("A faction with that name already exists in this campaign.")
+            error = "A faction with that name already exists in this campaign."
         else:
-            # Create and add new faction
-            faction = Faction(
+            new_faction = Faction(
                 name=form.name.data.strip(),
                 summary=form.summary.data,
                 faction_type=form.faction_type.data,
@@ -115,20 +115,33 @@ def create_faction(campaign_id):
                 source=form.source.data,
                 campaign_id=campaign.id
             )
-            db.session.add(faction)
+            db.session.add(new_faction)
             db.session.commit()
-            success = True
-            # Clear the form after successful submission
-            form = FactionForm()
-            form.alignment.choices = [(a, a) for a in alignment_list]
-            form.faction_type.choices = [(t, t) for t in faction_type_list]
+            success = "Faction created successfully!"
+
+            # If they clicked "Skip to NPCs"
+            if form.skip.data:
+                return redirect(url_for('create_npc', campaign_id=campaign.id))
+
+            # Reset form for a fresh creation if they want to add more
+            form = FactionForm()  # reset form
+            form.faction_type.choices = [(val, val) for val in faction_type_list]
+            form.alignment.choices = [(val, val) for val in alignment_list]
+
+    # Ensure choices are populated outside form lifecycle
+    form.faction_type.choices = [(val, val) for val in faction_type_list]
+    form.alignment.choices = [(val, val) for val in alignment_list]
 
     return render_template(
         'create_faction.html',
         campaign=campaign,
         form=form,
-        success=success
+        master_factions=master_factions,
+        used_names=used_names,
+        success=success,
+        error=error
     )
+
     
 @app.route('/campaign/<int:campaign_id>/npc/new', methods=['GET', 'POST'])
 def create_npc(campaign_id):

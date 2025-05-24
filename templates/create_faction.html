@@ -4,7 +4,7 @@
   <h2>Create a Faction for <strong>{{ campaign.name }}</strong></h2>
 
   {% if success %}
-    <div class="alert alert-success mt-3">✅ Faction created successfully!</div>
+    <div class="alert alert-success mt-3">✅ {{ success }}</div>
   {% endif %}
 
   {% if error %}
@@ -12,14 +12,15 @@
   {% endif %}
 
   <form method="POST" class="mt-4">
+    {{ form.hidden_tag() }}
 
     <!-- Master Faction Dropdown -->
     <div class="mb-4">
-    <label for="master_faction_select" class="form-label">Use Existing Master Faction (optional)</label>
-    <select id="master_faction_select" class="form-select">
+      <label for="master_faction_select" class="form-label">Use Existing Master Faction (optional)</label>
+      <select id="master_faction_select" class="form-select">
         <option value="">-- Select Master Faction --</option>
         {% for master in master_factions %}
-        {% if master.name not in used_names %}
+          {% if master.name not in used_names %}
             <option value="{{ master.id }}"
                     data-name="{{ master.name }}"
                     data-summary="{{ master.summary }}"
@@ -28,79 +29,64 @@
                     data-alignment="{{ master.alignment }}"
                     data-leader-name="{{ master.default_leader }}"
                     data-source="{{ master.source }}">
-            {{ master.name }} ({{ master.source }})
+              {{ master.name }} ({{ master.source }})
             </option>
-        {% endif %}
+          {% endif %}
         {% endfor %}
-    </select>
+      </select>
     </div>
 
-
     <hr>
-
     <h5><strong>Or create a new faction:</strong></h5>
 
-    <!-- Faction Name -->
+    <!-- Name -->
     <div class="mb-3">
-      <label for="name" class="form-label">Faction Name</label>
-      <input type="text" class="form-control {% if error %}is-invalid{% endif %}" id="name" name="name"
-             value="{{ previous_data.name if previous_data else '' }}" required>
-      {% if error %}
-        <div class="invalid-feedback">{{ error }}</div>
-      {% endif %}
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control" + (' is-invalid' if form.name.errors else '')) }}
+      {% for err in form.name.errors %}
+        <div class="invalid-feedback">{{ err }}</div>
+      {% endfor %}
     </div>
 
     <!-- Summary -->
     <div class="mb-3">
-      <label for="summary" class="form-label">Summary</label>
-      <textarea class="form-control" id="summary" name="summary" rows="3">{{ previous_data.summary if previous_data else '' }}</textarea>
+      {{ form.summary.label(class="form-label") }}
+      {{ form.summary(class="form-control") }}
     </div>
 
     <!-- Faction Type -->
     <div class="mb-3">
-      <label for="faction_type" class="form-label">Faction Type</label>
-      <select class="form-select" id="faction_type" name="faction_type">
-        {% for type in faction_type_list %}
-          <option value="{{ type }}" {% if previous_data and previous_data.faction_type == type %}selected{% endif %}>{{ type }}</option>
-        {% endfor %}
-      </select>
+      {{ form.faction_type.label(class="form-label") }}
+      {{ form.faction_type(class="form-select") }}
     </div>
 
     <!-- Base Location -->
     <div class="mb-3">
-      <label for="base_location" class="form-label">Base of Operations</label>
-      <input type="text" class="form-control" id="base_location" name="base_location"
-             value="{{ previous_data.base_location if previous_data else '' }}">
+      {{ form.base_location.label(class="form-label") }}
+      {{ form.base_location(class="form-control") }}
     </div>
 
     <!-- Alignment -->
     <div class="mb-3">
-      <label for="alignment" class="form-label">Alignment</label>
-      <select class="form-select" id="alignment" name="alignment">
-        {% for alignment in alignment_list %}
-          <option value="{{ alignment }}" {% if previous_data and previous_data.alignment == alignment %}selected{% endif %}>{{ alignment }}</option>
-        {% endfor %}
-      </select>
+      {{ form.alignment.label(class="form-label") }}
+      {{ form.alignment(class="form-select") }}
     </div>
 
     <!-- Leader Name -->
     <div class="mb-3">
-      <label for="leader_name" class="form-label">Leader Name</label>
-      <input type="text" class="form-control" id="leader_name" name="leader_name"
-             value="{{ previous_data.leader_name if previous_data else '' }}">
+      {{ form.leader_name.label(class="form-label") }}
+      {{ form.leader_name(class="form-control") }}
     </div>
 
     <!-- Source -->
     <div class="mb-3">
-      <label for="source" class="form-label">Source (optional)</label>
-      <input type="text" class="form-control" id="source" name="source"
-             value="{{ previous_data.source if previous_data else '' }}"
-             placeholder="e.g. Waterdeep: Dragon Heist">
+      {{ form.source.label(class="form-label") }}
+      {{ form.source(class="form-control", placeholder="e.g. Waterdeep: Dragon Heist") }}
     </div>
 
-    <!-- Buttons -->
-    <div class="d-flex justify-content-start gap-2">
-      <button type="submit" class="btn btn-primary">Create Faction</button>
+    <!-- Submit & Skip Buttons -->
+    <div class="d-flex gap-2">
+      {{ form.submit(class="btn btn-primary") }}
       <a href="{{ url_for('create_npc', campaign_id=campaign.id) }}" class="btn btn-outline-secondary">Skip to NPCs</a>
     </div>
   </form>
@@ -108,20 +94,21 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const masterSelect = document.getElementById('master_faction_select');
-    if (masterSelect) {
-      masterSelect.addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        document.getElementById('name').value = selected.dataset.name || '';
-        document.getElementById('summary').value = selected.dataset.summary || '';
-        document.getElementById('faction_type').value = selected.dataset.factionType || '';
-        document.getElementById('base_location').value = selected.dataset.baseLocation || '';
-        document.getElementById('alignment').value = selected.dataset.alignment || '';
-        document.getElementById('leader_name').value = selected.dataset.leaderName || '';
-        document.getElementById('source').value = selected.dataset.source || '';
-      });
-    }
+    const select = document.getElementById('master_faction_select');
+    if (!select) return;
+
+    select.addEventListener('change', function () {
+      const selected = this.options[this.selectedIndex];
+      if (!selected) return;
+
+      document.getElementById("name").value = selected.dataset.name || '';
+      document.getElementById("summary").value = selected.dataset.summary || '';
+      document.getElementById("faction_type").value = selected.dataset.factionType || '';
+      document.getElementById("base_location").value = selected.dataset.baseLocation || '';
+      document.getElementById("alignment").value = selected.dataset.alignment || '';
+      document.getElementById("leader_name").value = selected.dataset.leaderName || '';
+      document.getElementById("source").value = selected.dataset.source || '';
+    });
   });
 </script>
-
 {% endblock %}
