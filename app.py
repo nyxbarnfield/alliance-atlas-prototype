@@ -1,7 +1,7 @@
 from flask import Flask, flash, render_template, redirect, url_for, request, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from forms import FactionForm, CharacterForm
+from forms import FactionForm, CharacterForm, RelationshipForm
 import os
 
 # --- App & DB Setup ---
@@ -207,34 +207,40 @@ def claim_pc(campaign_id):
 @app.route('/campaign/<int:campaign_id>/relationship/new', methods=['GET', 'POST'])
 def create_relationship(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
-    characters = Character.query.filter_by(campaign_id=campaign.id).all()
+    form = RelationshipForm()
+    characters = Character.query.filter_by(campaign_id=campaign.id).order_by(Character.name).all()
 
-    if request.method == 'POST':
-        source_raw = request.form.get('source_id')
-        target_raw = request.form.get('target_id')
-        disposition = request.form.get('disposition')
-        relationship_status = request.form.get('relationship_status')
-        description = request.form.get('description')
+    form.source_id.choices = [(c.id, f"{c.name} ({c.character_type})") for c in characters]
+    form.target_id.choices = [(c.id, f"{c.name} ({c.character_type})") for c in characters]
 
-        source_type, source_id = source_raw.split('-')
-        target_type, target_id = target_raw.split('-')
+    if form.validate_on_submit():
+        if form.source_id.data == form.target_id.data:
+            form.source_id.errors.append("A character cannot have a relationship with themselves.")
+        else:
+            existing = Relationship.query.filter_by(
+                source_id=form.source_id.data,
+                target_id=form.target_id.data,
+                campaign_id=campaign.id
+            ).first()
+            if existing:
+                form.source_id.errors.append("This relationship already exists.")
+            else:
+                relationship = Relationship(
+                    source_id=form.source_id.data,
+                    source_type="character",
+                    target_id=form.target_id.data,
+                    target_type="character",
+                    relationship_status=form.relationship_status.data,
+                    disposition=form.disposition.data,
+                    description=form.description.data,
+                    campaign_id=campaign.id
+                )
+                db.session.add(relationship)
+                db.session.commit()
+                flash("Relationship created successfully!", "success")
+                return redirect(url_for('campaign_view', campaign_id=campaign.id))
 
-        rel = Relationship(
-            source_id=int(source_id), source_type=source_type,
-            target_id=int(target_id), target_type=target_type,
-            disposition=disposition, relationship_status=relationship_status,
-            description=description, campaign_id=campaign.id
-        )
-        db.session.add(rel)
-        db.session.commit()
-        return redirect(url_for('dashboard'))
-
-    return render_template(
-        'create_relationship.html',
-        characters=characters,
-        disposition_list=disposition_list,
-        relationship_status_list=relationship_status_list
-    )
+    return render_template('create_relationship.html', form=form, campaign=campaign)
 
 # --- Run App ---
 if __name__ == '__main__':

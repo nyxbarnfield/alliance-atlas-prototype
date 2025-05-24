@@ -19,57 +19,53 @@
 
     <!-- Source Character -->
     <div class="mb-3">
-      <label for="source_id" class="form-label">Source Character</label>
-      <select class="form-select" id="source_id" name="source_id" required>
-        <option value="">-- Select Character --</option>
-        {% for character in characters %}
-          <option value="character-{{ character.id }}">{{ character.name }} ({{ character.character_type }})</option>
-        {% endfor %}
-      </select>
+      {{ form.source_id.label(class_="form-label") }}
+      {{ form.source_id(class_="form-select", id="source_id", autofocus=true) }}
+      {% for err in form.source_id.errors %}
+        <div class="invalid-feedback d-block">{{ err }}</div>
+      {% endfor %}
     </div>
 
     <!-- Target Character -->
     <div class="mb-3">
-      <label for="target_id" class="form-label">Target Character</label>
-      <select class="form-select" id="target_id" name="target_id" required>
-        <option value="">-- Select Character --</option>
-        {% for character in characters %}
-          <option value="character-{{ character.id }}">{{ character.name }} ({{ character.character_type }})</option>
-        {% endfor %}
-      </select>
+      {{ form.target_id.label(class_="form-label") }}
+      {{ form.target_id(class_="form-select", id="target_id") }}
+      {% for err in form.target_id.errors %}
+        <div class="invalid-feedback d-block">{{ err }}</div>
+      {% endfor %}
     </div>
 
     <!-- Relationship Status -->
     <div class="mb-3">
-      <label for="relationship_status" class="form-label">Relationship Status</label>
-      <select class="form-select" id="relationship_status" name="relationship_status" required>
-        <option value="">-- Select Status --</option>
-        {% for status in relationship_status_list %}
-          <option value="{{ status }}">{{ status|capitalize }}</option>
-        {% endfor %}
-      </select>
+      {{ form.relationship_status.label(class_="form-label") }}
+      {{ form.relationship_status(class_="form-select", id="relationship_status") }}
+      {% for err in form.relationship_status.errors %}
+        <div class="invalid-feedback d-block">{{ err }}</div>
+      {% endfor %}
     </div>
 
     <!-- Disposition -->
     <div class="mb-3">
-      <label for="disposition" class="form-label">Disposition</label>
-      <select class="form-select" id="disposition" name="disposition" required>
-        <option value="">-- Select Disposition --</option>
-        {% for d in disposition_list %}
-          <option value="{{ d }}">{{ d|capitalize }}</option>
-        {% endfor %}
-      </select>
+      {{ form.disposition.label(class_="form-label") }}
+      {{ form.disposition(class_="form-select", id="disposition") }}
+      {% for err in form.disposition.errors %}
+        <div class="invalid-feedback d-block">{{ err }}</div>
+      {% endfor %}
     </div>
 
     <!-- Description -->
     <div class="mb-3">
-      <label for="description" class="form-label">Relationship Description</label>
-      <textarea class="form-control" id="description" name="description" rows="3" placeholder="Briefly describe the nature of this relationship..."></textarea>
+      {{ form.description.label(class_="form-label") }}
+      {{ form.description(class_="form-control", id="description", rows="3", placeholder="Briefly describe the nature of this relationship...") }}
+      {% for err in form.description.errors %}
+        <div class="invalid-feedback d-block">{{ err }}</div>
+      {% endfor %}
     </div>
 
-    <!-- Submit Button -->
+    <!-- Submit & Navigation -->
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary">Save Relationship</button>
+      {{ form.submit(class_="btn btn-primary") }}
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Return to Dashboard</a>
     </div>
   </form>
 </div>

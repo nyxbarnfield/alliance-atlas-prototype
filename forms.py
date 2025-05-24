@@ -25,3 +25,19 @@ class CharacterForm(FlaskForm):
     faction_id = SelectField('Faction', coerce=int, choices=[], validators=[Optional()])
     character_type = SelectField('Character Type', choices=[], validators=[DataRequired()])
     submit = SubmitField('Create Character')
+    
+class RelationshipForm(FlaskForm):
+    source_id = SelectField("Source Character", coerce=int, validators=[DataRequired()])
+    target_id = SelectField("Target Character", coerce=int, validators=[DataRequired()])
+    relationship_status = SelectField("Status", choices=[
+        ("positive", "Positive"),
+        ("neutral", "Neutral"),
+        ("negative", "Negative")
+    ], validators=[DataRequired()])
+    disposition = SelectField("Disposition", choices=[
+        ("ally", "Ally"),
+        ("enemy", "Enemy"),
+        ("unaligned", "Unaligned")
+    ], validators=[DataRequired()])
+    description = TextAreaField("Description (optional)")
+    submit = SubmitField("Create Relationship")

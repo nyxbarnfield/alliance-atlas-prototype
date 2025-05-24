@@ -109,10 +109,10 @@ class Relationship(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     source_id = db.Column(db.Integer, nullable=False)
-    source_type = db.Column(db.String(10), nullable=False)  # 'NPC' or 'PC'
+    source_type = "character"
 
     target_id = db.Column(db.Integer, nullable=False)
-    target_type = db.Column(db.String(10), nullable=False)
+    target_type = "character"
 
     relationship_status = db.Column(db.String(10), nullable=False)  # 'positive', 'neutral', 'negative'
     disposition = db.Column(db.String(10), nullable=False)  # 'ally', 'enemy', 'unaligned'
