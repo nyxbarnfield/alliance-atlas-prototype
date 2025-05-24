@@ -23,5 +23,5 @@ class CharacterForm(FlaskForm):
     description = TextAreaField('Description', validators=[Optional()])
     source = SelectField('Source', choices=[], default='Homebrew')
     faction_id = SelectField('Faction', coerce=int, choices=[], validators=[Optional()])
-    character_type = SelectField('Character Type', choices=[('NPC', 'NPC'), ('PC', 'PC')], default='NPC')
+    character_type = SelectField('Character Type', choices=[], validators=[DataRequired()])
     submit = SubmitField('Create Character')

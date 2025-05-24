@@ -151,39 +151,39 @@ def create_character(campaign_id):
     form.age_range.choices = [(val, val) for val in age_range_list]
     form.source.choices = [(val, val) for val in source_list]
     form.faction_id.choices = [(f.id, f.name) for f in campaign.factions]
+    form.character_type.choices = [("NPC", "NPC"), ("PC", "PC")]
 
     if form.validate_on_submit():
-        if form.character_type.data == 'NPC':
-            character = NPC(
-                name=form.name.data.strip(),
-                species=form.species.data,
-                occupation=form.occupation.data,
-                occupation_custom=form.occupation_custom.data,
-                age_range=form.age_range.data,
-                description=form.description.data,
-                source=form.source.data,
-                faction_id=form.faction_id.data,
-                campaign_id=campaign.id
-            )
+        # Check for duplicate name in this campaign
+        existing = Character.query.filter(
+            db.func.lower(Character.name) == form.name.data.strip().lower(),
+            Character.campaign_id == campaign.id
+        ).first()
+        if existing:
+            form.name.errors.append("A character with that name already exists in this campaign.")
+            return render_template('create_character.html', campaign=campaign, form=form)
         else:
             character = Character(
                 name=form.name.data.strip(),
+                character_type=form.character_type.data,
                 species=form.species.data,
                 occupation=form.occupation.data,
-                occupation_custom=form.occupation_custom.data,
+                occupation_custom=form.occupation_custom.data or None,
                 age_range=form.age_range.data,
-                description=form.description.data,
+                description=form.description.data if form.character_type.data == "NPC" else None,
                 source=form.source.data,
-                faction_id=form.faction_id.data,
+                faction_id=form.faction_id.data if form.character_type.data == "NPC" else None,
                 campaign_id=campaign.id,
-                is_claimed=False
+                user_id=None if form.character_type.data == "NPC" else session.get("user_id"),
+                is_claimed=False if form.character_type.data == "NPC" else True
             )
-        db.session.add(character)
-        db.session.commit()
-        flash(f'{form.character_type.data} created successfully!', 'success')
-        return redirect(url_for('campaign_view', campaign_id=campaign.id))
+            db.session.add(character)
+            db.session.commit()
+            flash(f'{form.character_type.data} created successfully!', 'success')
+            return redirect(url_for('create_character', campaign_id=campaign.id))
 
     return render_template('create_character.html', campaign=campaign, form=form)
+
 
 
 @app.route('/campaign/<int:campaign_id>/claim', methods=['GET', 'POST'])
@@ -194,29 +194,31 @@ def claim_pc(campaign_id):
         return redirect(url_for('index'))
     if request.method == 'POST':
         pc_id = request.form.get("pc_id")
-        pc = PlayerCharacter.query.get_or_404(pc_id)
+        pc = Character.query.get_or_404(pc_id)
         if pc.is_claimed:
             return "Already claimed", 400
         pc.user_id = user_id
         pc.is_claimed = True
         db.session.commit()
         return redirect(url_for('dashboard'))
-    unclaimed_pcs = PlayerCharacter.query.filter_by(campaign_id=campaign.id, is_claimed=False).all()
+    unclaimed_pcs = Character.query.filter_by(campaign_id=campaign.id, is_claimed=False).all()
     return render_template('claim_pc.html', campaign=campaign, unclaimed_pcs=unclaimed_pcs)
 
 @app.route('/campaign/<int:campaign_id>/relationship/new', methods=['GET', 'POST'])
 def create_relationship(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
-    npcs = NPC.query.filter_by(campaign_id=campaign.id).all()
-    pcs = PlayerCharacter.query.filter_by(campaign_id=campaign.id).all()
+    characters = Character.query.filter_by(campaign_id=campaign.id).all()
+
     if request.method == 'POST':
         source_raw = request.form.get('source_id')
         target_raw = request.form.get('target_id')
         disposition = request.form.get('disposition')
         relationship_status = request.form.get('relationship_status')
         description = request.form.get('description')
+
         source_type, source_id = source_raw.split('-')
         target_type, target_id = target_raw.split('-')
+
         rel = Relationship(
             source_id=int(source_id), source_type=source_type,
             target_id=int(target_id), target_type=target_type,
@@ -226,10 +228,10 @@ def create_relationship(campaign_id):
         db.session.add(rel)
         db.session.commit()
         return redirect(url_for('dashboard'))
+
     return render_template(
         'create_relationship.html',
-        npcs=npcs,
-        pcs=pcs,
+        characters=characters,
         disposition_list=disposition_list,
         relationship_status_list=relationship_status_list
     )

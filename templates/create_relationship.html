@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Define a Relationship in <strong>{{ campaign.name }}</strong></h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }} alert-dismissible fade show" role="alert">
+          {% if category == 'success' %}✅ {% endif %}{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="mt-4">
+    {{ form.hidden_tag() }}
+
+    <!-- Source Character -->
+    <div class="mb-3">
+      <label for="source_id" class="form-label">Source Character</label>
+      <select class="form-select" id="source_id" name="source_id" required>
+        <option value="">-- Select Character --</option>
+        {% for character in characters %}
+          <option value="character-{{ character.id }}">{{ character.name }} ({{ character.character_type }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Target Character -->
+    <div class="mb-3">
+      <label for="target_id" class="form-label">Target Character</label>
+      <select class="form-select" id="target_id" name="target_id" required>
+        <option value="">-- Select Character --</option>
+        {% for character in characters %}
+          <option value="character-{{ character.id }}">{{ character.name }} ({{ character.character_type }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Relationship Status -->
+    <div class="mb-3">
+      <label for="relationship_status" class="form-label">Relationship Status</label>
+      <select class="form-select" id="relationship_status" name="relationship_status" required>
+        <option value="">-- Select Status --</option>
+        {% for status in relationship_status_list %}
+          <option value="{{ status }}">{{ status|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Disposition -->
+    <div class="mb-3">
+      <label for="disposition" class="form-label">Disposition</label>
+      <select class="form-select" id="disposition" name="disposition" required>
+        <option value="">-- Select Disposition --</option>
+        {% for d in disposition_list %}
+          <option value="{{ d }}">{{ d|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label for="description" class="form-label">Relationship Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3" placeholder="Briefly describe the nature of this relationship..."></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Save Relationship</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
