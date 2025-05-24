@@ -1,8 +1,7 @@
-from app import app, db 
+from app import app, db
 from models import (
-    User, Campaign, Membership, Faction, NPC,
-    PlayerCharacter, MasterFaction, MasterNPC,
-    Relationship, Note
+    User, Campaign, Membership, Faction, Character,
+    MasterFaction, MasterNPC, Relationship, Note
 )
 
 def seed_all():
@@ -15,12 +14,15 @@ def seed_all():
         dm = User(username="dm_alex")
         player1 = User(username="player_jade")
         player2 = User(username="player_toby")
-
         db.session.add_all([dm, player1, player2])
         db.session.commit()
 
         # --- Campaign ---
-        campaign = Campaign(name="Waterdeep Shadows", summary="A tangled web of politics and power.", visibility="private")
+        campaign = Campaign(
+            name="Waterdeep Shadows",
+            summary="A tangled web of politics and power.",
+            visibility="private"
+        )
         db.session.add(campaign)
         db.session.commit()
 
@@ -41,7 +43,6 @@ def seed_all():
             default_leader="Davil Starsong",
             source="Waterdeep: Dragon Heist"
         )
-
         harpers = MasterFaction(
             name="The Harpers",
             summary="Spies and musicians seeking balance and freedom across the realm.",
@@ -51,7 +52,6 @@ def seed_all():
             default_leader="Remallia Haventree",
             source="Player's Handbook"
         )
-
         db.session.add_all([zhentarim, harpers])
 
         # --- Master NPCs ---
@@ -85,7 +85,6 @@ def seed_all():
             source="Waterdeep: Dragon Heist",
             campaign_id=campaign.id
         )
-
         f2 = Faction(
             name="The Harpers",
             summary="Underground resistance of information brokers",
@@ -96,44 +95,64 @@ def seed_all():
             source="Player's Handbook",
             campaign_id=campaign.id
         )
-
         db.session.add_all([f1, f2])
         db.session.commit()
 
-        # --- NPCs ---
-        n1 = NPC(name="Davil Starsong", species="Elf", occupation="Agent", age_range="101–200",
-                 description="Silver-tongued Zhentarim representative.", source="Waterdeep: Dragon Heist",
-                 campaign_id=campaign.id, faction_id=f1.id)
-        n2 = NPC(name="Remallia Haventree", species="Half-Elf", occupation="Spy", age_range="61–100",
-                 description="Cunning Harper agent and noblewoman.", source="Player's Handbook",
-                 campaign_id=campaign.id, faction_id=f2.id)
-        n3 = NPC(name="Mirt the Moneylender", species="Human", occupation="Merchant", age_range="61–100",
-                 description="Brash, bloated, and brilliant.", source="Waterdeep: Dragon Heist",
-                 campaign_id=campaign.id, faction_id=f2.id)
-        n4 = NPC(name="The Black Viper", species="Human", occupation="Thief", age_range="31–45",
-                 description="Masked noble burglar with unknown allegiance.", source="Waterdeep: Dragon Heist",
-                 campaign_id=campaign.id, faction_id=None)
+        # --- Characters (Unified NPC + PC model) ---
+        characters = [
+            # NPCs
+            Character(
+                name="Davil Starsong", character_type="NPC", species="Elf", occupation="Agent",
+                age_range="101–200", description="Silver-tongued Zhentarim representative.",
+                source="Waterdeep: Dragon Heist", campaign_id=campaign.id, faction_id=f1.id
+            ),
+            Character(
+                name="Remallia Haventree", character_type="NPC", species="Half-Elf", occupation="Spy",
+                age_range="61–100", description="Cunning Harper agent and noblewoman.",
+                source="Player's Handbook", campaign_id=campaign.id, faction_id=f2.id
+            ),
+            Character(
+                name="Mirt the Moneylender", character_type="NPC", species="Human", occupation="Merchant",
+                age_range="61–100", description="Brash, bloated, and brilliant.",
+                source="Waterdeep: Dragon Heist", campaign_id=campaign.id, faction_id=f2.id
+            ),
+            Character(
+                name="The Black Viper", character_type="NPC", species="Human", occupation="Thief",
+                age_range="31–45", description="Masked noble burglar with unknown allegiance.",
+                source="Waterdeep: Dragon Heist", campaign_id=campaign.id
+            ),
 
-        db.session.add_all([n1, n2, n3, n4])
+            # PCs (unclaimed)
+            Character(
+                name="Kaelen Brightflame", character_type="PC", species="Half-Elf", occupation="Fighter",
+                age_range="18–30", source="Homebrew", campaign_id=campaign.id, user_id=None, is_claimed=False
+            ),
+            Character(
+                name="Torrin Dusk", character_type="PC", species="Dragonborn", occupation="Sorcerer",
+                age_range="18–30", source="Homebrew", campaign_id=campaign.id, user_id=None, is_claimed=False
+            )
+        ]
+        db.session.add_all(characters)
         db.session.commit()
 
-        # --- Player Characters ---
-        pc1 = PlayerCharacter(name="Kaelen Brightflame", is_claimed=False, campaign_id=campaign.id)
-        pc2 = PlayerCharacter(name="Torrin Dusk", is_claimed=False, campaign_id=campaign.id)
-        db.session.add_all([pc1, pc2])
+        # --- Fetch characters for linking ---
+        davil = Character.query.filter_by(name="Davil Starsong", campaign_id=campaign.id).first()
+        remi = Character.query.filter_by(name="Remallia Haventree", campaign_id=campaign.id).first()
+        mirt = Character.query.filter_by(name="Mirt the Moneylender", campaign_id=campaign.id).first()
+        viper = Character.query.filter_by(name="The Black Viper", campaign_id=campaign.id).first()
 
         # --- Relationships ---
         db.session.add_all([
             Relationship(
-                source_id=n1.id, source_type="npc",
-                target_id=n2.id, target_type="npc",
+                source_id=davil.id, source_type="character",
+                target_id=remi.id, target_type="character",
                 relationship_status="neutral", disposition="ally",
                 description="They tolerate each other for the sake of Waterdeep.",
                 campaign_id=campaign.id
             ),
             Relationship(
-                source_id=n3.id, source_type="npc",
-                target_id=n4.id, target_type="npc",
+                source_id=mirt.id, source_type="character",
+                target_id=viper.id, target_type="character",
                 relationship_status="negative", disposition="enemy",
                 description="Mirt is actively hunting the Viper for political reasons.",
                 campaign_id=campaign.id
@@ -143,13 +162,13 @@ def seed_all():
         # --- Notes ---
         db.session.add_all([
             Note(
-                character_id=n1.id, character_type="npc",
+                character_id=davil.id, character_type="character",
                 user_id=dm.id, campaign_id=campaign.id,
                 content="DM note: Davil might secretly support the Harpers.",
                 is_private=True
             ),
             Note(
-                character_id=n2.id, character_type="npc",
+                character_id=remi.id, character_type="character",
                 user_id=player1.id, campaign_id=campaign.id,
                 content="Remallia gave us intel on the Viper.",
                 is_private=False

@@ -31,20 +31,26 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     memberships = db.relationship('Membership', backref='user', lazy=True)
     notes = db.relationship('Note', backref='author', lazy=True)
-    pcs = db.relationship('PlayerCharacter', backref='owner', lazy=True)
+    claimed_characters = db.relationship('Character', backref='user')
+
+    def __repr__(self):
+        return f"<User {self.username}>"
+
 
 class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     summary = db.Column(db.String(200))
     visibility = db.Column(db.String(20))  # 'public' or 'private'
-
+    characters = db.relationship('Character', backref='campaign', lazy=True)
     memberships = db.relationship('Membership', backref='campaign', lazy=True)
     factions = db.relationship('Faction', backref='campaign', lazy=True)
-    npcs = db.relationship('NPC', backref='campaign', lazy=True)
-    pcs = db.relationship('PlayerCharacter', backref='campaign', lazy=True)
     relationships = db.relationship('Relationship', backref='campaign', lazy=True)
     notes = db.relationship('Note', backref='campaign', lazy=True)
+
+    def __repr__(self):
+        return f"<Campaign {self.name}>"
+
 
 class Membership(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -70,43 +76,31 @@ class Faction(db.Model):
         db.UniqueConstraint('name', 'campaign_id', name='uq_faction_name_campaign'),
     )
 
-class NPC(db.Model):
+    def __repr__(self):
+        return f"<Faction {self.name}>"
+
+
+class Character(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    species = db.Column(db.String(50))
-    occupation = db.Column(db.String(100))
-    age_range = db.Column(db.String(50))
-    description = db.Column(db.Text)
-    source = db.Column(db.String(100))
-
-    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
+    character_type = db.Column(db.String(10), nullable=False)  # "NPC" or "PC"
+    species = db.Column(db.String(50), nullable=False)
+    occupation = db.Column(db.String(100), nullable=False)
+    occupation_custom = db.Column(db.String(100), nullable=True)
+    age_range = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text, nullable=True)  # Only for NPCs
+    source = db.Column(db.String(100), nullable=True)
     faction_id = db.Column(db.Integer, db.ForeignKey('faction.id'), nullable=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Only for PCs
+    is_claimed = db.Column(db.Boolean, default=False)  # Helpful for PC flow
 
     __table_args__ = (
-        db.UniqueConstraint('name', 'campaign_id', name='uq_npc_name_campaign'),
+        db.UniqueConstraint('name', 'campaign_id', name='uq_character_name_campaign'),
     )
 
-class CharacterForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(max=100)])
-    species = SelectField('Species', choices=[], validators=[DataRequired()])
-    occupation = SelectField('Occupation', choices=[], validators=[DataRequired()])
-    occupation_custom = StringField('Other Occupation', validators=[Optional(), Length(max=100)])
-    age_range = SelectField('Age Range', choices=[], validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[Optional()])
-    source = SelectField('Source', choices=[], default='Homebrew')
-    faction_id = SelectField('Faction', coerce=int, choices=[], validators=[Optional()])
-    character_type = SelectField('Character Type', choices=[('NPC', 'NPC'), ('PC', 'PC')], default='NPC')
-    submit = SubmitField('Create Character')
-
-# -- Player Characters --
-
-class PlayerCharacter(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    is_claimed = db.Column(db.Boolean, default=False)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
+    def __repr__(self):
+        return f"<Character {self.name} ({self.character_type})>"
 
 
 # -- Relationships for Diagram --
@@ -115,7 +109,7 @@ class Relationship(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     source_id = db.Column(db.Integer, nullable=False)
-    source_type = db.Column(db.String(10), nullable=False)  # 'npc' or 'pc'
+    source_type = db.Column(db.String(10), nullable=False)  # 'NPC' or 'PC'
 
     target_id = db.Column(db.Integer, nullable=False)
     target_type = db.Column(db.String(10), nullable=False)
@@ -131,6 +125,9 @@ class Relationship(db.Model):
         db.CheckConstraint("disposition IN ('ally', 'enemy', 'unaligned')"),
     )
 
+    def __repr__(self):
+        return f"<Relationship {self.source_type}-{self.source_id} → {self.target_type}-{self.target_id}>"
+
 
 # -- Player Notes --
 
@@ -138,10 +135,13 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     character_id = db.Column(db.Integer, nullable=False)
-    character_type = db.Column(db.String(10), nullable=False)  # 'npc' or 'pc'
+    character_type = db.Column(db.String(10), nullable=False)  # 'NPC' or 'PC'
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
 
     content = db.Column(db.Text, nullable=False)
     is_private = db.Column(db.Boolean, default=True)
+
+    def __repr__(self):
+        return f"<Note for {self.character_type}-{self.character_id}>"

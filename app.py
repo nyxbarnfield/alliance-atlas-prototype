@@ -1,7 +1,7 @@
 from flask import Flask, flash, render_template, redirect, url_for, request, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from forms import FactionForm
+from forms import FactionForm, CharacterForm
 import os
 
 # --- App & DB Setup ---
@@ -16,7 +16,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # --- Models ---
 from models import (
     db, User, Campaign, Membership,
-    Faction, NPC, PlayerCharacter, Relationship,
+    Faction, Character, Relationship,
     MasterFaction, MasterNPC
 )
 db.init_app(app)
@@ -166,7 +166,7 @@ def create_character(campaign_id):
                 campaign_id=campaign.id
             )
         else:
-            character = PlayerCharacter(
+            character = Character(
                 name=form.name.data.strip(),
                 species=form.species.data,
                 occupation=form.occupation.data,
