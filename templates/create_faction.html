@@ -3,11 +3,18 @@
 <div class="container mt-5">
   <h2>Create a Faction for <strong>{{ campaign.name }}</strong></h2>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
+  <!-- User Messages Functions -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
     {% for category, message in messages %}
-      <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }}">
+      <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }} alert-dismissible fade show" role="alert">
+        {% if category == 'success' %}✅ {% endif %}{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     {% endfor %}
-  {% endwith %}
+  {% endif %}
+{% endwith %}
+
 
   <form method="POST" class="mt-4">
     {{ form.hidden_tag() }}
