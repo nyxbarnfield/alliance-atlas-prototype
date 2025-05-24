@@ -129,7 +129,27 @@ def create_faction(campaign_id):
         form=form,
         success=success
     )
+    
+@app.route('/campaign/<int:campaign_id>/npc/new', methods=['GET', 'POST'])
+def create_npc(campaign_id):
+    campaign = Campaign.query.get_or_404(campaign_id)
+    form = NPCForm()  # Ensure you have an NPCForm defined
 
+    if form.validate_on_submit():
+        # Create a new NPC instance with form data
+        npc = NPC(
+            name=form.name.data.strip(),
+            role=form.role.data,
+            description=form.description.data,
+            faction_id=form.faction_id.data,  # Assuming NPC is linked to a faction
+            campaign_id=campaign.id
+        )
+        db.session.add(npc)
+        db.session.commit()
+        flash('NPC created successfully!', 'success')
+        return redirect(url_for('campaign_detail', campaign_id=campaign.id))  # Adjust as needed
+
+    return render_template('create_npc.html', campaign=campaign, form=form)
 
 @app.route('/campaign/<int:campaign_id>/claim', methods=['GET', 'POST'])
 def claim_pc(campaign_id):

@@ -1,99 +1,100 @@
-<!-- templates/create_faction.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create Faction for {{ campaign.name }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Create a New NPC for <strong>{{ campaign.name }}</strong></h2>
 
-<h2>Create Faction for <strong>{{ campaign.name }}</strong></h2>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} mt-3">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-<form method="POST" action="{{ url_for('create_faction', campaign_id=campaign.id) }}">
-    <div class="mb-4">
-        <label class="form-label">Use Existing Master Faction (optional)</label>
-        <select id="master_faction_id" name="master_faction_id" class="form-select">
-            <option value="">-- Select Master Faction --</option>
-            {% for mf in master_factions %}
-                <option value="{{ mf.id }}"
-                    data-name="{{ mf.name }}"
-                    data-summary="{{ mf.summary }}"
-                    data-type="{{ mf.faction_type }}"
-                    data-base="{{ mf.base_location }}"
-                    data-alignment="{{ mf.alignment }}"
-                    data-leader="{{ mf.default_leader }}"
-                    data-source="{{ mf.source }}"
-                >
-                    {{ mf.name }} ({{ mf.source }})
-                </option>
-            {% endfor %}
-        </select>
-    </div>
+  <form method="POST">
+    {{ form.hidden_tag() }}
 
-    <hr>
-    <h5 class="mb-3">Or create a new faction:</h5>
-
+    <!-- Name -->
     <div class="mb-3">
-        <label class="form-label">Faction Name</label>
-        <input type="text" name="name" class="form-control" required>
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control", placeholder="e.g. Mirt the Moneylender") }}
+      {% if form.name.errors %}
+        <div class="text-danger">{{ form.name.errors[0] }}</div>
+      {% endif %}
     </div>
 
+    <!-- Species -->
     <div class="mb-3">
-        <label class="form-label">Summary</label>
-        <textarea name="summary" class="form-control" rows="3" required></textarea>
+      {{ form.species.label(class="form-label") }}
+      {{ form.species(class="form-select") }}
+      {% if form.species.errors %}
+        <div class="text-danger">{{ form.species.errors[0] }}</div>
+      {% endif %}
     </div>
 
+    <!-- Occupation -->
     <div class="mb-3">
-        <label class="form-label">Faction Type</label>
-        <select name="faction_type" class="form-select" required>
-            {% for ft in faction_type_list %}
-                <option value="{{ ft }}">{{ ft }}</option>
-            {% endfor %}
-        </select>
+      {{ form.occupation.label(class="form-label") }}
+      {{ form.occupation(class="form-select", id="occupationSelect") }}
+      {% if form.occupation.errors %}
+        <div class="text-danger">{{ form.occupation.errors[0] }}</div>
+      {% endif %}
     </div>
 
+    <!-- Other Occupation -->
+    <div class="mb-3" id="customOccupationGroup" style="display: none;">
+      {{ form.occupation_custom.label(class="form-label") }}
+      {{ form.occupation_custom(class="form-control", placeholder="Enter custom occupation") }}
+    </div>
+
+    <!-- Age Range -->
     <div class="mb-3">
-        <label class="form-label">Base of Operations</label>
-        <input type="text" name="base_location" class="form-control" required>
+      {{ form.age_range.label(class="form-label") }}
+      {{ form.age_range(class="form-select") }}
     </div>
 
+    <!-- Faction -->
     <div class="mb-3">
-        <label class="form-label">Alignment</label>
-        <select name="alignment" class="form-select" required>
-            {% for a in alignment_list %}
-                <option value="{{ a }}">{{ a }}</option>
-            {% endfor %}
-        </select>
+      {{ form.faction_id.label(class="form-label") }}
+      {{ form.faction_id(class="form-select") }}
     </div>
 
+    <!-- Source -->
     <div class="mb-3">
-        <label class="form-label">Leader Name</label>
-        <input type="text" name="leader_name" class="form-control" required>
+      {{ form.source.label(class="form-label") }}
+      {{ form.source(class="form-select") }}
     </div>
 
+    <!-- Description -->
     <div class="mb-3">
-        <label class="form-label">Source (optional)</label>
-        <input type="text" name="source" class="form-control" placeholder="e.g. Waterdeep: Dragon Heist">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows=4, placeholder="Optional background details...") }}
     </div>
 
-    <button type="submit" class="btn btn-primary">Create Faction</button>
-</form>
+    <!-- Buttons -->
+    <div class="d-flex gap-2">
+      {{ form.submit(class="btn btn-primary") }}
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+  </form>
+</div>
 
 <script>
-    document.getElementById('master_faction_id').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        if (!selected.value) return;
+  document.addEventListener("DOMContentLoaded", function () {
+    const occupationSelect = document.getElementById("occupationSelect");
+    const customGroup = document.getElementById("customOccupationGroup");
 
-        document.querySelector('input[name="name"]').value = selected.dataset.name || '';
-        document.querySelector('textarea[name="summary"]').value = selected.dataset.summary || '';
-        document.querySelector('select[name="faction_type"]').value = selected.dataset.type || '';
-        document.querySelector('input[name="base_location"]').value = selected.dataset.base || '';
-        document.querySelector('select[name="alignment"]').value = selected.dataset.alignment || '';
-        document.querySelector('input[name="leader_name"]').value = selected.dataset.leader || '';
-        document.querySelector('input[name="source"]').value = selected.dataset.source || '';
-    });
+    function toggleCustomField() {
+      if (occupationSelect.value === "Other") {
+        customGroup.style.display = "block";
+      } else {
+        customGroup.style.display = "none";
+        document.getElementById("occupation_custom").value = "";
+      }
+    }
+
+    occupationSelect.addEventListener("change", toggleCustomField);
+    toggleCustomField(); // run on page load
+  });
 </script>
-
-</body>
-</html>
+{% endblock %}
