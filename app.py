@@ -51,7 +51,7 @@ def dashboard():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('index'))
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     memberships = Membership.query.filter_by(user_id=user.id).all()
     return render_template('dashboard.html', user=user, memberships=memberships)
 
@@ -60,7 +60,7 @@ def campaign_view(campaign_id):
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('index'))
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     campaign = Campaign.query.get_or_404(campaign_id)
     membership = Membership.query.filter_by(user_id=user.id, campaign_id=campaign.id).first()
     if not membership:
