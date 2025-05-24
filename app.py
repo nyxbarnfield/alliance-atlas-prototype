@@ -1,5 +1,6 @@
 from flask import Flask, flash, render_template, redirect, url_for, request, session
-from flask_sqlalchemy import SQLAlchemy, func
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from forms import FactionForm
 import os
 
@@ -27,7 +28,7 @@ from options.faction_type_options import faction_type_list
 from options.age_range_options import age_range_list
 from options.source_options import source_list
 from options.relationship_options import relationship_status_list, disposition_list
-from options.species_options import species_list  # Formerly race_list
+from options.species_options import species_list
 
 # --- Routes ---
 
@@ -95,10 +96,10 @@ def create_faction(campaign_id):
     # Always repopulate select options
     form.faction_type.choices = [(val, val) for val in faction_type_list]
     form.alignment.choices = [(val, val) for val in alignment_list]
+    form.source.choices = [(val, val) for val in source_list]
 
     master_factions = MasterFaction.query.all()
     used_names = [f.name for f in campaign.factions]
-    success = None
 
     if form.validate_on_submit():
         existing = Faction.query.filter(

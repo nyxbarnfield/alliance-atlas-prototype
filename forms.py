@@ -9,7 +9,7 @@ class FactionForm(FlaskForm):
     base_location = StringField('Base of Operations', validators=[Optional(), Length(max=100)])
     alignment = SelectField('Alignment', choices=[], validators=[DataRequired()])
     leader_name = StringField('Leader Name', validators=[Optional(), Length(max=100)])
-    source = StringField('Source (optional)', validators=[Optional(), Length(max=100)])
+    source = SelectField('Source', choices=[], default='Homebrew')
 
     submit = SubmitField('Create Faction')
     skip = SubmitField('Skip to NPCs')
@@ -21,7 +21,7 @@ class NPCForm(FlaskForm):
     occupation_custom = StringField('Other Occupation', validators=[Optional(), Length(max=100)])
     age_range = SelectField('Age Range', choices=[], validators=[DataRequired()])
     description = TextAreaField('Description', validators=[Optional()])
-    source = SelectField('Source', choices=[], validators=[Optional()])
+    source = SelectField('Source', choices=[], default='Homebrew')
     faction_id = SelectField('Faction', coerce=int, choices=[], validators=[Optional()])
 
     submit = SubmitField('Create NPC')
