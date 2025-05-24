@@ -20,55 +20,55 @@
     <!-- Character Type -->
     <div class="mb-3">
       {{ form.character_type.label(class="form-label") }}
-      {{ form.character_type(class="form-select") }}
+      {{ form.character_type(class="form-select", id="character_type") }}
     </div>
 
     <!-- Name -->
     <div class="mb-3">
-      {{ form.name.label(class="form-label") }}
-      {{ form.name(class="form-control") }}
+    {{ form.name(class="form-control", id="name", placeholder="e.g. Volo or Imoen", aria-describedby="nameHelp") }}
+    <small id="nameHelp" class="form-text text-muted">Enter the full name of the character.</small> 
     </div>
 
     <!-- Species -->
     <div class="mb-3">
       {{ form.species.label(class="form-label") }}
-      {{ form.species(class="form-select") }}
+      {{ form.species(class="form-select", id="species") }}
     </div>
 
     <!-- Occupation -->
     <div class="mb-3">
       {{ form.occupation.label(class="form-label") }}
-      {{ form.occupation(class="form-select") }}
+      {{ form.occupation(class="form-select", id="occupation") }}
     </div>
 
     <!-- Other Occupation -->
     <div class="mb-3">
       {{ form.occupation_custom.label(class="form-label") }}
-      {{ form.occupation_custom(class="form-control") }}
+      {{ form.occupation_custom(class="form-control", id="occupation_custom", placeholder="Enter a custom occupation") }}
     </div>
 
     <!-- Age Range -->
     <div class="mb-3">
       {{ form.age_range.label(class="form-label") }}
-      {{ form.age_range(class="form-select") }}
+      {{ form.age_range(class="form-select", id="age_range") }}
     </div>
 
     <!-- Description -->
     <div class="mb-3">
       {{ form.description.label(class="form-label") }}
-      {{ form.description(class="form-control") }}
+      {{ form.description(class="form-control", id="description") }}
     </div>
 
     <!-- Source -->
     <div class="mb-3">
       {{ form.source.label(class="form-label") }}
-      {{ form.source(class="form-select") }}
+      {{ form.source(class="form-select", id="source") }}
     </div>
 
     <!-- Faction -->
     <div class="mb-3">
       {{ form.faction_id.label(class="form-label") }}
-      {{ form.faction_id(class="form-select") }}
+      {{ form.faction_id(class="form-select", id="faction_id") }}
     </div>
 
     <!-- Submit Button -->
@@ -77,4 +77,28 @@
     </div>
   </form>
 </div>
+
+<!-- JS to show/hide fields like faction or description only for NPCs-->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const typeField = document.getElementById("character_type");
+  const factionField = document.getElementById("faction_id")?.closest(".mb-3");
+  const descriptionField = document.getElementById("description")?.closest(".mb-3");
+  const occupationSelect = document.getElementById("occupation");
+  const customOccupationField = document.getElementById("occupation_custom")?.closest(".mb-3");
+
+  function updateFields() {
+    const isNPC = typeField?.value === "NPC";
+    if (factionField) factionField.style.display = isNPC ? "block" : "none";
+    if (descriptionField) descriptionField.style.display = isNPC ? "block" : "none";
+    if (customOccupationField) customOccupationField.style.display = (occupationSelect?.value === "Other") ? "block" : "none";
+  }
+
+  if (typeField) typeField.addEventListener("change", updateFields);
+  if (occupationSelect) occupationSelect.addEventListener("change", updateFields);
+
+  updateFields(); // Initial render
+});
+</script>
+
 {% endblock %}
