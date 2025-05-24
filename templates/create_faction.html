@@ -92,7 +92,12 @@
     <!-- Submit & Skip Buttons -->
     <div class="d-flex gap-2">
       {{ form.submit(class="btn btn-primary") }}
-      {{ form.skip(class="btn btn-outline-secondary") }}
+
+      {% if has_factions %}
+        <a href="{{ url_for('create_npc', campaign_id=campaign.id) }}" class="btn btn-primary">Next: Create Characters</a>
+      {% else %}
+        {{ form.skip(class="btn btn-outline-secondary") }}
+      {% endif %}
     </div>
   </form>
 </div>

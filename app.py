@@ -128,12 +128,15 @@ def create_faction(campaign_id):
 
             return redirect(url_for('create_faction', campaign_id=campaign.id))  # reload fresh form
 
+    has_factions = len(campaign.factions) > 0
+    
     return render_template(
         'create_faction.html',
         campaign=campaign,
         form=form,
         master_factions=master_factions,
-        used_names=used_names
+        used_names=used_names,
+        has_factions=has_factions
     )
 
 
