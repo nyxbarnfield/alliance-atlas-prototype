@@ -89,96 +89,47 @@ def create_campaign():
 
 @app.route('/campaign/<int:campaign_id>/faction/new', methods=['GET', 'POST'])
 def create_faction(campaign_id):
-    success = False
     campaign = Campaign.query.get_or_404(campaign_id)
-    used_names = [f.name for f in campaign.factions]
-    master_factions = MasterFaction.query.all()
+    form = FactionForm()
 
-    # --- Check if form submitted ---
-    if request.method == 'POST':
-        name = request.form.get('name').strip()
-        summary = request.form.get('summary')
-        faction_type = request.form.get('faction_type')
-        base_location = request.form.get('base_location')
-        alignment = request.form.get('alignment')
-        leader_name = request.form.get('leader_name')
-        source = request.form.get('source')
+    # Populate choices for select fields
+    form.alignment.choices = [(a, a) for a in alignment_list]
+    form.faction_type.choices = [(t, t) for t in faction_type_list]
 
-        existing = Faction.query.filter_by(name=name, campaign_id=campaign.id).first()
-        if existing:
-            error = "A faction with that name already exists in this campaign."
-            return render_template(
-                'create_faction.html',
-                campaign=campaign,
-                master_factions=master_factions,
-                faction_type_list=faction_type_list,
-                alignment_list=alignment_list,
-                source_list=source_list,
-                used_names=used_names,
-                error=error,
-                previous_data=request.form
+    success = False
+
+    if form.validate_on_submit():
+        # Check for duplicate faction name
+        existing_faction = Faction.query.filter_by(name=form.name.data.strip(), campaign_id=campaign.id).first()
+        if existing_faction:
+            form.name.errors.append("A faction with that name already exists in this campaign.")
+        else:
+            # Create and add new faction
+            faction = Faction(
+                name=form.name.data.strip(),
+                summary=form.summary.data,
+                faction_type=form.faction_type.data,
+                base_location=form.base_location.data,
+                alignment=form.alignment.data,
+                leader_name=form.leader_name.data,
+                source=form.source.data,
+                campaign_id=campaign.id
             )
+            db.session.add(faction)
+            db.session.commit()
+            success = True
+            # Clear the form after successful submission
+            form = FactionForm()
+            form.alignment.choices = [(a, a) for a in alignment_list]
+            form.faction_type.choices = [(t, t) for t in faction_type_list]
 
-        faction = Faction(
-            name=name,
-            summary=summary,
-            faction_type=faction_type,
-            base_location=base_location,
-            alignment=alignment,
-            leader_name=leader_name,
-            source=source,
-            campaign_id=campaign.id
-        )
-        db.session.add(faction)
-        db.session.commit()
-        success = True
-
-        return redirect(url_for('create_faction', campaign_id=campaign.id, success=1))
-
-    success = request.args.get("success") == "1"
     return render_template(
         'create_faction.html',
         campaign=campaign,
-        master_factions=master_factions,
-        faction_type_list=faction_type_list,
-        alignment_list=alignment_list,
-        source_list=source_list,
-        used_names=used_names,
+        form=form,
         success=success
     )
 
-@app.route('/campaign/<int:campaign_id>/npc/new', methods=['GET', 'POST'])
-def create_npc(campaign_id):
-    campaign = Campaign.query.get_or_404(campaign_id)
-    master_npcs = MasterNPC.query.all()
-    if request.method == 'POST':
-        name = request.form.get('name').strip()
-        species = request.form.get('species')
-        occupation = request.form.get('occupation') or request.form.get('occupation_custom')
-        age_range = request.form.get('age_range')
-        description = request.form.get('description')
-        source = request.form.get('source')
-        faction_id = request.form.get('faction_id')
-        existing = NPC.query.filter_by(name=name, campaign_id=campaign.id).first()
-        if existing:
-            return "An NPC with that name already exists in this campaign.", 400
-        npc = NPC(
-            name=name, species=species, occupation=occupation,
-            age_range=age_range, description=description,
-            source=source, faction_id=faction_id or None,
-            campaign_id=campaign.id
-        )
-        db.session.add(npc)
-        db.session.commit()
-        return redirect(url_for('dashboard'))
-    return render_template(
-        'create_npc.html',
-        campaign=campaign,
-        master_npcs=master_npcs,
-        species_list=species_list,
-        occupation_list=occupation_list,
-        age_range_list=age_range_list
-    )
 
 @app.route('/campaign/<int:campaign_id>/claim', methods=['GET', 'POST'])
 def claim_pc(campaign_id):
