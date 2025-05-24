@@ -15,7 +15,6 @@
   {% endif %}
 {% endwith %}
 
-
   <form method="POST" class="mt-4">
     {{ form.hidden_tag() }}
 
@@ -46,8 +45,8 @@
 
     <!-- Name -->
     <div class="mb-3">
-      {{ form.name.label(class="form-label") }}
-      {{ form.name(class="form-control" + (' is-invalid' if form.name.errors else ''), id="name", required=true) }}
+      {{ form.name.label(class_="form-label") }}
+      {{ form.name(class_="form-control" + (' is-invalid' if form.name.errors else ''), id="name", required=true) }}
       {% for err in form.name.errors %}
         <div class="invalid-feedback">{{ err }}</div>
       {% endfor %}
@@ -55,48 +54,48 @@
 
     <!-- Summary -->
     <div class="mb-3">
-      {{ form.summary.label(class="form-label") }}
-      {{ form.summary(class="form-control", id="summary") }}
+      {{ form.summary.label(class_="form-label") }}
+      {{ form.summary(class_="form-control", id="summary") }}
     </div>
 
     <!-- Faction Type -->
     <div class="mb-3">
-      {{ form.faction_type.label(class="form-label") }}
-      {{ form.faction_type(class="form-select", id="faction_type") }}
+      {{ form.faction_type.label(class_="form-label") }}
+      {{ form.faction_type(class_="form-select", id="faction_type") }}
     </div>
 
     <!-- Base Location -->
     <div class="mb-3">
-      {{ form.base_location.label(class="form-label") }}
-      {{ form.base_location(class="form-control", id="base_location") }}
+      {{ form.base_location.label(class_="form-label") }}
+      {{ form.base_location(class_="form-control", id="base_location") }}
     </div>
 
     <!-- Alignment -->
     <div class="mb-3">
-      {{ form.alignment.label(class="form-label") }}
-      {{ form.alignment(class="form-select", id="alignment") }}
+      {{ form.alignment.label(class_="form-label") }}
+      {{ form.alignment(class_="form-select", id="alignment") }}
     </div>
 
     <!-- Leader Name -->
     <div class="mb-3">
-      {{ form.leader_name.label(class="form-label") }}
-      {{ form.leader_name(class="form-control", id="leader_name") }}
+      {{ form.leader_name.label(class_="form-label") }}
+      {{ form.leader_name(class_="form-control", id="leader_name") }}
     </div>
 
     <!-- Source -->
     <div class="mb-3">
-      {{ form.source.label(class="form-label") }}
-      {{ form.source(class="form-select", id="source") }}
+      {{ form.source.label(class_="form-label") }}
+      {{ form.source(class_="form-select", id="source") }}
     </div>
 
     <!-- Submit & Skip Buttons -->
     <div class="d-flex gap-2">
-      {{ form.submit(class="btn btn-primary") }}
+      {{ form.submit(class_="btn btn-primary") }}
 
       {% if has_factions %}
         <a href="{{ url_for('create_character', campaign_id=campaign.id) }}" class="btn btn-primary">Next: Create Characters</a>
       {% else %}
-        {{ form.skip(class="btn btn-outline-secondary") }}
+        {{ form.skip(class_="btn btn-outline-secondary") }}
       {% endif %}
     </div>
   </form>
