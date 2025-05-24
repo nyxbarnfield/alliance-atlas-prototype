@@ -124,7 +124,7 @@ def create_faction(campaign_id):
             flash("Faction created successfully!", "success")
 
             if form.skip.data:
-                return redirect(url_for('create_npc', campaign_id=campaign.id))
+                return redirect(url_for('create_character', campaign_id=campaign.id))
 
             return redirect(url_for('create_faction', campaign_id=campaign.id))  # reload fresh form
 
@@ -139,28 +139,52 @@ def create_faction(campaign_id):
         has_factions=has_factions
     )
 
-
     
-@app.route('/campaign/<int:campaign_id>/npc/new', methods=['GET', 'POST'])
-def create_npc(campaign_id):
+@app.route('/campaign/<int:campaign_id>/character/new', methods=['GET', 'POST'])
+def create_character(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
-    form = NPCForm()  # Ensure you have an NPCForm defined
+    form = CharacterForm()
+
+    # Populate select fields
+    form.species.choices = [(val, val) for val in species_list]
+    form.occupation.choices = [(val, val) for val in occupation_list]
+    form.age_range.choices = [(val, val) for val in age_range_list]
+    form.source.choices = [(val, val) for val in source_list]
+    form.faction_id.choices = [(f.id, f.name) for f in campaign.factions]
 
     if form.validate_on_submit():
-        # Create a new NPC instance with form data
-        npc = NPC(
-            name=form.name.data.strip(),
-            role=form.role.data,
-            description=form.description.data,
-            faction_id=form.faction_id.data,  # Assuming NPC is linked to a faction
-            campaign_id=campaign.id
-        )
-        db.session.add(npc)
+        if form.character_type.data == 'NPC':
+            character = NPC(
+                name=form.name.data.strip(),
+                species=form.species.data,
+                occupation=form.occupation.data,
+                occupation_custom=form.occupation_custom.data,
+                age_range=form.age_range.data,
+                description=form.description.data,
+                source=form.source.data,
+                faction_id=form.faction_id.data,
+                campaign_id=campaign.id
+            )
+        else:
+            character = PlayerCharacter(
+                name=form.name.data.strip(),
+                species=form.species.data,
+                occupation=form.occupation.data,
+                occupation_custom=form.occupation_custom.data,
+                age_range=form.age_range.data,
+                description=form.description.data,
+                source=form.source.data,
+                faction_id=form.faction_id.data,
+                campaign_id=campaign.id,
+                is_claimed=False
+            )
+        db.session.add(character)
         db.session.commit()
-        flash('NPC created successfully!', 'success')
-        return redirect(url_for('campaign_detail', campaign_id=campaign.id))  # Adjust as needed
+        flash(f'{form.character_type.data} created successfully!', 'success')
+        return redirect(url_for('campaign_view', campaign_id=campaign.id))
 
-    return render_template('create_npc.html', campaign=campaign, form=form)
+    return render_template('create_character.html', campaign=campaign, form=form)
+
 
 @app.route('/campaign/<int:campaign_id>/claim', methods=['GET', 'POST'])
 def claim_pc(campaign_id):
@@ -179,17 +203,6 @@ def claim_pc(campaign_id):
         return redirect(url_for('dashboard'))
     unclaimed_pcs = PlayerCharacter.query.filter_by(campaign_id=campaign.id, is_claimed=False).all()
     return render_template('claim_pc.html', campaign=campaign, unclaimed_pcs=unclaimed_pcs)
-
-@app.route('/campaign/<int:campaign_id>/pc/new', methods=['POST'])
-def create_pc(campaign_id):
-    name = request.form.get("name")
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('index'))
-    pc = PlayerCharacter(name=name, user_id=user_id, campaign_id=campaign_id, is_claimed=True)
-    db.session.add(pc)
-    db.session.commit()
-    return redirect(url_for('dashboard'))
 
 @app.route('/campaign/<int:campaign_id>/relationship/new', methods=['GET', 'POST'])
 def create_relationship(campaign_id):

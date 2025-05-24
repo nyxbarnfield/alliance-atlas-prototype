@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Create a Character for <strong>{{ campaign.name }}</strong></h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }} alert-dismissible fade show" role="alert">
+          {% if category == 'success' %}✅ {% endif %}{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="mt-4">
+    {{ form.hidden_tag() }}
+
+    <!-- Character Type -->
+    <div class="mb-3">
+      {{ form.character_type.label(class="form-label") }}
+      {{ form.character_type(class="form-select") }}
+    </div>
+
+    <!-- Name -->
+    <div class="mb-3">
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control") }}
+    </div>
+
+    <!-- Species -->
+    <div class="mb-3">
+      {{ form.species.label(class="form-label") }}
+      {{ form.species(class="form-select") }}
+    </div>
+
+    <!-- Occupation -->
+    <div class="mb-3">
+      {{ form.occupation.label(class="form-label") }}
+      {{ form.occupation(class="form-select") }}
+    </div>
+
+    <!-- Other Occupation -->
+    <div class="mb-3">
+      {{ form.occupation_custom.label(class="form-label") }}
+      {{ form.occupation_custom(class="form-control") }}
+    </div>
+
+    <!-- Age Range -->
+    <div class="mb-3">
+      {{ form.age_range.label(class="form-label") }}
+      {{ form.age_range(class="form-select") }}
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control") }}
+    </div>
+
+    <!-- Source -->
+    <div class="mb-3">
+      {{ form.source.label(class="form-label") }}
+      {{ form.source(class="form-select") }}
+    </div>
+
+    <!-- Faction -->
+    <div class="mb-3">
+      {{ form.faction_id.label(class="form-label") }}
+      {{ form.faction_id(class="form-select") }}
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-flex gap-2">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+</div>
+{% endblock %}

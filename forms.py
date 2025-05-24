@@ -25,3 +25,15 @@ class NPCForm(FlaskForm):
     faction_id = SelectField('Faction', coerce=int, choices=[], validators=[Optional()])
 
     submit = SubmitField('Create NPC')
+
+class CharacterForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(max=100)])
+    species = SelectField('Species', choices=[], validators=[DataRequired()])
+    occupation = SelectField('Occupation', choices=[], validators=[DataRequired()])
+    occupation_custom = StringField('Other Occupation', validators=[Optional(), Length(max=100)])
+    age_range = SelectField('Age Range', choices=[], validators=[DataRequired()])
+    description = TextAreaField('Description', validators=[Optional()])
+    source = SelectField('Source', choices=[], default='Homebrew')
+    faction_id = SelectField('Faction', coerce=int, choices=[], validators=[Optional()])
+    character_type = SelectField('Character Type', choices=[('NPC', 'NPC'), ('PC', 'PC')], default='NPC')
+    submit = SubmitField('Create Character')
