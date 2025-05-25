@@ -1,3 +1,213 @@
+/* ========= GLOBAL BASE ========= */
 body {
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
   background-color: #f8f9fa;
+  color: #212529;
+  line-height: 1.6;
+}
+
+/* ========= NAVBAR ========= */
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.navbar {
+  background-color: #212529;
+}
+
+.navbar.navbar-dark.bg-dark {
+  background-color: #212529 !important;
+}
+
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255,255,255,1%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+.navbar .nav-link {
+  color: #e9ecef;
+  transition: color 0.2s;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.navbar-brand span {
+  color: #ffffff !important;
+}
+
+/* ========= BUTTONS ========= */
+.btn {
+  border-radius: 0.25rem;
+  font-weight: 500;
+  padding: 0.45rem 1.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+  background-color: #212529;
+  border-color: #212529;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #343a40;
+  border-color: #343a40;
+}
+
+.btn-outline-secondary {
+  background-color: transparent;
+  border: 1px solid #6c757d;
+  color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* ========= CARDS ========= */
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-header,
+.card-footer {
+  background-color: #ffffff;
+  border-color: #dee2e6;
+  font-weight: 600;
+}
+
+/* ========= TABLES ========= */
+.table {
+  border-collapse: collapse;
+}
+
+.table th {
+  background-color: #f1f3f5;
+  font-weight: 600;
+}
+
+.table th,
+.table td {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+}
+
+/* ========= FORMS ========= */
+.form-control {
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+  border-color: #212529;
+  box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.15);
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+/* ========= FILTER CHIPS ========= */
+.badge.bg-primary {
+  background-color: #212529 !important;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
+/* ========= MODAL ========= */
+.modal-content {
+  border-radius: 0.5rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+/* ========= SKIP LINK ========= */
+.visually-hidden-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #212529;
+  color: white;
+  z-index: 1050;
+}
+
+/* ========= FOOTER ========= */
+footer {
+  font-size: 0.875rem;
+  color: #6c757d;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  text-align: center;
+  width: 100%;
+  border-top: 1px solid #dee2e6;
+}
+
+
+/* ========= UTILITIES ========= */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.z-3 {
+  z-index: 3;
+}
+
+
+/* ========= DASHBOARD STYLING ========= */
+/* Dashboard container */
+.dashboard-container {
+  margin-top: 3rem;
+}
+
+/* Campaign list styling */
+.campaigns-list {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+/* Card styling */
+.campaign-card {
+  flex: 1 1 calc(50% - 1.5rem);
+  max-width: calc(50% - 1.5rem);
+}
+
+.custom-card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Neutral button theme */
+.btn-neutral {
+  border: 1px solid #212529;
+  background-color: transparent;
+  color: #212529;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-neutral:hover {
+  background-color: #212529;
+  color: #fff;
+  text-decoration: none;
 }

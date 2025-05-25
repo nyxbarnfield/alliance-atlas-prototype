@@ -2,7 +2,11 @@ from flask import Flask, flash, render_template, redirect, url_for, request, ses
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from forms import FactionForm, CharacterForm, RelationshipForm
-import os
+import os, random
+from constants import EDGE_COLOR_MAP, DEFAULT_FACTION_COLORS
+import logging
+from datetime import datetime
+
 
 # --- App & DB Setup ---
 app = Flask(__name__)
@@ -12,6 +16,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'instance', 'atlas.sqlite')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+# --- Logging Setup ---
+
+logging.basicConfig(level=logging.DEBUG)  # You can change to INFO or WARNING in production
+logger = logging.getLogger(__name__)
 
 # --- Models ---
 from models import (
@@ -29,6 +39,11 @@ from options.age_range_options import age_range_list
 from options.source_options import source_list
 from options.relationship_options import relationship_status_list, disposition_list
 from options.species_options import species_list
+
+# --- Functions ---
+
+def generate_random_color():
+    return "#{:06x}".format(random.randint(0, 0xFFFFFF))
 
 # --- Routes ---
 
@@ -51,10 +66,14 @@ def login():
 def dashboard():
     user_id = session.get('user_id')
     if not user_id:
-        return redirect(url_for('index'))
-    user = db.session.get(User, user_id)
-    memberships = Membership.query.filter_by(user_id=user.id).all()
-    return render_template('dashboard.html', user=user, memberships=memberships)
+        flash("Please log in to access the dashboard.", "warning")
+        return redirect(url_for('login'))
+
+    user = User.query.get_or_404(user_id)
+    campaigns = [m.campaign for m in user.memberships]
+
+    return render_template('dashboard.html', user=user, campaigns=campaigns)
+
 
 @app.route('/campaign/<int:campaign_id>')
 def campaign_view(campaign_id):
@@ -207,40 +226,149 @@ def claim_pc(campaign_id):
 @app.route('/campaign/<int:campaign_id>/relationship/new', methods=['GET', 'POST'])
 def create_relationship(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
-    form = RelationshipForm()
     characters = Character.query.filter_by(campaign_id=campaign.id).order_by(Character.name).all()
 
+    form = RelationshipForm()
+
+    # Populate dropdowns
     form.source_id.choices = [(c.id, f"{c.name} ({c.character_type})") for c in characters]
     form.target_id.choices = [(c.id, f"{c.name} ({c.character_type})") for c in characters]
+    form.relationship_status.choices = [(val, val.capitalize()) for val in relationship_status_list]
+    form.disposition.choices = [(val, val.capitalize()) for val in disposition_list]
 
     if form.validate_on_submit():
-        if form.source_id.data == form.target_id.data:
-            form.source_id.errors.append("A character cannot have a relationship with themselves.")
+        source_id = int(form.source_id.data)
+        target_id = int(form.target_id.data)
+
+        # Prevent self-relationships
+        if source_id == target_id:
+            form.source_id.errors.append("A character cannot be in a relationship with themselves.")
         else:
+            # Check if relationship already exists in either direction
             existing = Relationship.query.filter_by(
-                source_id=form.source_id.data,
-                target_id=form.target_id.data,
-                campaign_id=campaign.id
+                campaign_id=campaign.id,
+                source_id=source_id,
+                target_id=target_id
+            ).first() or Relationship.query.filter_by(
+                campaign_id=campaign.id,
+                source_id=target_id,
+                target_id=source_id
             ).first()
+
             if existing:
-                form.source_id.errors.append("This relationship already exists.")
+                form.source_id.errors.append("A relationship between these characters already exists.")
             else:
+                source_character = Character.query.get(source_id)
+                target_character = Character.query.get(target_id)
+
                 relationship = Relationship(
-                    source_id=form.source_id.data,
-                    source_type="character",
-                    target_id=form.target_id.data,
-                    target_type="character",
+                    source_id=source_character.id,
+                    source_type=source_character.character_type,
+                    target_id=target_character.id,
+                    target_type=target_character.character_type,
                     relationship_status=form.relationship_status.data,
                     disposition=form.disposition.data,
                     description=form.description.data,
                     campaign_id=campaign.id
                 )
+
                 db.session.add(relationship)
                 db.session.commit()
                 flash("Relationship created successfully!", "success")
-                return redirect(url_for('campaign_view', campaign_id=campaign.id))
+                return redirect(url_for('create_relationship', campaign_id=campaign.id))
 
-    return render_template('create_relationship.html', form=form, campaign=campaign)
+    return render_template(
+        'create_relationship.html',
+        campaign=campaign,
+        form=form
+    )
+
+@app.route('/campaign/<int:campaign_id>/diagram')
+def view_diagram(campaign_id):
+    campaign = Campaign.query.get_or_404(campaign_id)
+    logger.debug(f"Viewing diagram for campaign: {campaign.name} (ID: {campaign.id})")
+    faction_colors = DEFAULT_FACTION_COLORS.copy()
+
+    # Track used colors to avoid duplicates
+    used_colors = set(faction_colors.values())
+
+    # Assign random colors to unknown factions
+    for faction in campaign.factions:
+        logger.debug(f"Processing faction: {faction.name}")
+        if faction.name not in faction_colors:
+            color = generate_random_color()
+            while color in used_colors:
+                color = generate_random_color()
+            faction_colors[faction.name] = color
+            used_colors.add(color)
+            logger.debug(f"Assigned new color {color} to faction {faction.name}")
+
+    elements = []
+    seen_groups = set()
+
+    # --- Characters → Nodes ---
+    for char in campaign.characters:
+        if char.character_type == "PC":
+            group = "Party"
+        elif char.faction:
+            group = char.faction.name
+        else:
+            group = "Unaffiliated"
+
+        # Track group for later parent creation
+        seen_groups.add(group)
+
+        logger.debug(f"Adding character: {char.name} | Type: {char.character_type} | Group: {group}")
+
+        elements.append({
+            'data': {
+                'id': f"char-{char.id}",
+                'label': char.name,
+                'color': faction_colors.get(char.faction.name if char.faction else None, "#AAAAAA"),
+                'parent': group,
+                'faction': group,
+                'type': char.character_type,
+                'species': char.species,
+                'occupation': char.occupation,
+                'age_range': char.age_range,
+                'description': char.description or ""
+            }
+        })
+
+    # --- Group Containers (Compound Nodes) ---
+    for group in seen_groups:
+        logger.debug(f"Creating group node: {group}")
+        elements.append({
+            'data': {
+                'id': group,
+                'label': group
+            }
+        })
+
+    # --- Relationships → Edges ---
+    for rel in campaign.relationships:
+        logger.debug(f"Relationship: {rel.source_id} -> {rel.target_id} | {rel.disposition} ({rel.relationship_status})")
+        elements.append({
+            'data': {
+                'source': f"char-{rel.source_id}",
+                'target': f"char-{rel.target_id}",
+                'color': EDGE_COLOR_MAP.get(rel.disposition, "#AAAAAA"),
+                'disposition': rel.disposition,
+                'status': rel.relationship_status
+            }
+        })
+        
+    logger.debug(f"Total elements prepared for Cytoscape: {len(elements)}")
+
+    return render_template(
+        'view_diagram.html',
+        campaign=campaign,
+        elements=elements,
+        faction_colors=faction_colors,
+        edge_colors=EDGE_COLOR_MAP
+    )
+
+
 
 # --- Run App ---
 if __name__ == '__main__':

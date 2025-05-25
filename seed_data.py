@@ -11,9 +11,9 @@ def seed_all():
             return
 
         # --- Users ---
-        dm = User(username="dm_alex")
-        player1 = User(username="player_jade")
-        player2 = User(username="player_toby")
+        dm = User(username="dm_nyx")
+        player1 = User(username="player_alex")
+        player2 = User(username="player_james")
         db.session.add_all([dm, player1, player2])
         db.session.commit()
 

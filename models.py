@@ -91,10 +91,11 @@ class Character(db.Model):
     description = db.Column(db.Text, nullable=True)  # Only for NPCs
     source = db.Column(db.String(100), nullable=True)
     faction_id = db.Column(db.Integer, db.ForeignKey('faction.id'), nullable=True)
+    faction = db.relationship('Faction', backref='characters')
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Only for PCs
     is_claimed = db.Column(db.Boolean, default=False)  # Helpful for PC flow
-
+    
     __table_args__ = (
         db.UniqueConstraint('name', 'campaign_id', name='uq_character_name_campaign'),
     )
