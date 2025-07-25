@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -134,15 +135,43 @@ class Relationship(db.Model):
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    is_private = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    character_id = db.Column(db.Integer, nullable=False)
-    character_type = db.Column(db.String(10), nullable=False)  # 'NPC' or 'PC'
-
+    character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
 
-    content = db.Column(db.Text, nullable=False)
-    is_private = db.Column(db.Boolean, default=True)
+    # Relationships for traceability and scoped access
+    user = db.relationship('User', back_populates='notes')
+    character = db.relationship('Character', back_populates='notes')
+    campaign = db.relationship('Campaign', back_populates='notes')
 
     def __repr__(self):
-        return f"<Note for {self.character_type}-{self.character_id}>"
+        """Developer-friendly debug representation."""
+        return f"<Note id={self.id} char='{self.character.name}' user='{self.user.username}' priv={self.is_private}>"
+
+    def __str__(self):
+        """User-facing friendly description."""
+        return f"Note for {self.character.name} by {self.user.username}"
+
+    def __eq__(self, other):
+        """Defines equality based on ID and model type."""
+        return isinstance(other, Note) and self.id == other.id
+
+    def __hash__(self):
+        """Allows use in sets or as dict keys."""
+        return hash(self.id)
+
+    def to_dict(self):
+        """Serializes the note to a dictionary for APIs or JSON responses."""
+        return {
+            "id": self.id,
+            "content": self.content,
+            "character": self.character.name,
+            "user": self.user.username,
+            "campaign_id": self.campaign_id,
+            "is_private": self.is_private,
+            "created_at": self.created_at.isoformat()
+        }

@@ -5,8 +5,6 @@ from forms import FactionForm, CharacterForm, RelationshipForm
 import os, random
 from constants import EDGE_COLOR_MAP, DEFAULT_FACTION_COLORS
 import logging
-from datetime import datetime
-
 
 # --- App & DB Setup ---
 app = Flask(__name__)
@@ -20,7 +18,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- Logging Setup ---
 
-logging.basicConfig(level=logging.DEBUG)  # You can change to INFO or WARNING in production
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # --- Models ---
